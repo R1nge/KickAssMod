@@ -18,11 +18,14 @@ public class Plugin : BaseUnityPlugin
     }
 }
 
-[HarmonyPatch(typeof(AirportCheckInKiosk), MethodType.Setter)]
+[HarmonyPatch(typeof(AirportCheckInKiosk), MethodType.Normal)]
+[HarmonyPatch("HoverEnter")]
 internal class Patch01
 {
+    internal static new ManualLogSource Logger;
+
     static void Prefix(AirportCheckInKiosk __instance)
     {
-        __instance.interactTime = 1000;
+        Logger.LogInfo("HoverEnter");
     }
 }
