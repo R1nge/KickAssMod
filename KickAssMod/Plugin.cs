@@ -35,12 +35,40 @@ internal class Patch02
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
         Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
-        Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
-        var players = PlayerHandler.GetAllPlayers();
-        foreach (var player in players)
+        if (emoteWheelData.emoteName == "Shrug")
         {
-            player.character.transform.position += Vector3.up * 10;
-            //player.character.refs.animations.PlaySpecificAnimation(emoteWheelData.anim);
+            Plugin.Logger.LogInfo("Kick");
+            var players = PlayerHandler.GetAllPlayers();
+            foreach (var player in players)
+            {
+                if (player.character.IsLocal)
+                {
+                    Plugin.Logger.LogInfo("Local player");
+                    var rayDirection = player.character.transform.forward;
+                    var rayOrigin = player.character.transform.position;
+                    var ray = new Ray(rayOrigin, rayDirection);
+                    if (Physics.Raycast(ray, out var hit, 10f))
+                    {
+                        Plugin.Logger.LogInfo($"{player.character.name}: {hit.collider.name}");
+                        Plugin.Logger.LogInfo($"{player.character.name}: {hit.point}");
+                        Plugin.Logger.LogInfo($"{player.character.name}: {hit.distance}");
+                        if (hit.collider.TryGetComponent(out CharacterRagdoll character))
+                        {
+                            character.MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                        }
+                        else
+                        {
+                            Plugin.Logger.LogInfo($"No collision; applying to self");
+                            character.MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                        }
+                    }
+                    else
+                    {
+                        Plugin.Logger.LogInfo($"No collision; applying to self");
+                        player.character.GetComponent<CharacterRagdoll>().MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                    }
+                }
+            }
         }
     }
 }
