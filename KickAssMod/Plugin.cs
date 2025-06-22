@@ -68,7 +68,7 @@ internal class Patch04
         if (Character.localCharacter.input.pauseWasPressed)
         {
             Plugin.Logger.LogInfo("Pressed pause");
-            if (__instance.pauseMenu.isOpen)
+            if (!__instance.pauseMenu.isOpen)
             {
                 Plugin.Logger.LogInfo("Close pause menu amd resume time");
                 Time.timeScale = 1f;
