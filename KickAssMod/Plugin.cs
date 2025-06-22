@@ -20,8 +20,7 @@ public class Plugin : BaseUnityPlugin
     }
 }
 
-[HarmonyPatch(typeof(AirportCheckInKiosk), MethodType.Normal)]
-[HarmonyPatch("HoverEnter")]
+[HarmonyPatch(typeof(AirportCheckInKiosk), nameof(AirportCheckInKiosk.HoverEnter), MethodType.Normal)]
 internal class Patch01
 {
     static void Prefix(AirportCheckInKiosk __instance)
@@ -33,8 +32,8 @@ internal class Patch01
 [HarmonyPatch(typeof(EmoteWheel), nameof(EmoteWheel.Hover), MethodType.Normal)]
 internal class Patch02
 {
-    static void Prefix(EmoteWheel __instance, EmoteWheelData ___data)
+    static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
-        Plugin.Logger.LogInfo($"Choose EmoteWheel {___data.emoteName}");
+        Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
     }
 }
