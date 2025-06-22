@@ -1,7 +1,7 @@
-﻿using System;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine;
 
 namespace KickAssMod;
 
@@ -35,5 +35,12 @@ internal class Patch02
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
         Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
+        Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
+        var players = PlayerHandler.GetAllPlayers();
+        foreach (var player in players)
+        {
+            player.character.transform.position += Vector3.up * 10;
+            //player.character.refs.animations.PlaySpecificAnimation(emoteWheelData.anim);
+        }
     }
 }
