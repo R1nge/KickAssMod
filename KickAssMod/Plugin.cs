@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 
@@ -22,10 +23,8 @@ public class Plugin : BaseUnityPlugin
 [HarmonyPatch("HoverEnter")]
 internal class Patch01
 {
-    internal static new ManualLogSource Logger;
-
     static void Prefix(AirportCheckInKiosk __instance)
     {
-        Logger.LogInfo("HoverEnter");
+        Plugin.Logger.LogInfo("HoverEnter");
     }
 }
