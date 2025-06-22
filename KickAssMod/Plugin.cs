@@ -62,20 +62,12 @@ internal class Patch02
                         }
                         else
                         {
-                            Plugin.Logger.LogInfo($"No collision; applying to self 1");
-                            foreach (Bodypart bodypart in character.partList)
-                            {
-                                bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                            }
+                            Plugin.Logger.LogInfo("No collision");
                         }
                     }
                     else
                     {
-                        Plugin.Logger.LogInfo($"No collision; applying to self 2");
-                        foreach (Bodypart bodypart in player.character.GetComponent<CharacterRagdoll>().partList)
-                        {
-                            bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                        }
+                        Plugin.Logger.LogInfo("No collision");
                     }
                 }
             }
