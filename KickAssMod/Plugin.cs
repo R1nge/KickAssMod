@@ -22,6 +22,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(Patch02));
         Harmony.CreateAndPatchAll(typeof(Patch03));
         Harmony.CreateAndPatchAll(typeof(Patch04));
+        Harmony.CreateAndPatchAll(typeof(Patch05));
     }
 }
 
@@ -77,6 +78,17 @@ internal class Patch04
         }
     }
 }
+
+[HarmonyPatch(typeof(SteamLobbyHandler), nameof(SteamLobbyHandler.LeaveLobby), MethodType.Normal)]
+internal class Patch05
+{
+    static void Prefix(SteamLobbyHandler __instance)
+    {
+        Plugin.Logger.LogInfo("LeaveLobby resume time");
+        Time.timeScale = 1f;
+    }
+}
+
 
 internal class KickMono : MonoBehaviourPun
 {
