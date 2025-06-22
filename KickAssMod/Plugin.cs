@@ -20,6 +20,8 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         Harmony.CreateAndPatchAll(typeof(Patch01));
         Harmony.CreateAndPatchAll(typeof(Patch02));
+        Harmony.CreateAndPatchAll(typeof(Patch03));
+        Harmony.CreateAndPatchAll(typeof(Patch04));
     }
 }
 
@@ -29,6 +31,50 @@ internal class Patch01
     static void Prefix(AirportCheckInKiosk __instance)
     {
         Plugin.Logger.LogInfo("HoverEnter");
+    }
+}
+
+[HarmonyPatch(typeof(GUIManager), nameof(GUIManager.TriggerMenuWindowOpened), MethodType.Normal)]
+internal class Patch03
+{
+    static void Prefix(MenuWindow window, GUIManager __instance)
+    {
+        if (Character.localCharacter.input.pauseWasPressed)
+        {
+            Plugin.Logger.LogInfo("Pressed pause");
+            if (__instance.wheelActive)
+            {
+                return;
+            }
+
+            if (__instance.endScreen.isOpen)
+            {
+                return;
+            }
+
+            Plugin.Logger.LogInfo("Open pause menu and freeze time");
+
+            Time.timeScale = 0.1f;
+            Character.localCharacter.input.pauseWasPressed = false;
+        }
+    }
+}
+
+[HarmonyPatch(typeof(GUIManager), nameof(GUIManager.TriggerMenuWindowClosed), MethodType.Normal)]
+internal class Patch04
+{
+    static void Prefix(MenuWindow window, GUIManager __instance)
+    {
+        if (Character.localCharacter.input.pauseWasPressed)
+        {
+            Plugin.Logger.LogInfo("Pressed pause");
+            if (__instance.pauseMenu.isOpen)
+            {
+                Plugin.Logger.LogInfo("Close pause menu amd resume time");
+                Time.timeScale = 1f;
+                Character.localCharacter.input.pauseWasPressed = false;
+            }
+        }
     }
 }
 
