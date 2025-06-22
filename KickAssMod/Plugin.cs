@@ -16,6 +16,7 @@ public class Plugin : BaseUnityPlugin
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         Harmony.CreateAndPatchAll(typeof(Patch01));
+        Harmony.CreateAndPatchAll(typeof(Patch02));
     }
 }
 
