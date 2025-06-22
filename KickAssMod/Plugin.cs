@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
+using Zorro.Core;
 
 namespace KickAssMod;
 
@@ -44,7 +45,7 @@ internal class Patch02
                 if (player.character.IsLocal)
                 {
                     Plugin.Logger.LogInfo("Local player");
-                    var rayDirection = player.character.transform.forward;
+                    var rayDirection = MainCamera.instance.transform.forward;
                     var rayOrigin = player.character.transform.position;
                     var ray = new Ray(rayOrigin, rayDirection);
                     if (Physics.Raycast(ray, out var hit, 10f))
@@ -54,18 +55,27 @@ internal class Patch02
                         Plugin.Logger.LogInfo($"{player.character.name}: {hit.distance}");
                         if (hit.collider.TryGetComponent(out CharacterRagdoll character))
                         {
-                            character.MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                            foreach (Bodypart bodypart in character.partList)
+                            {
+                                bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                            }
                         }
                         else
                         {
-                            Plugin.Logger.LogInfo($"No collision; applying to self");
-                            character.MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                            Plugin.Logger.LogInfo($"No collision; applying to self 1");
+                            foreach (Bodypart bodypart in character.partList)
+                            {
+                                bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                            }
                         }
                     }
                     else
                     {
-                        Plugin.Logger.LogInfo($"No collision; applying to self");
-                        player.character.GetComponent<CharacterRagdoll>().MoveAllRigsInDirection(player.character.transform.forward * 100f);
+                        Plugin.Logger.LogInfo($"No collision; applying to self 2");
+                        foreach (Bodypart bodypart in player.character.GetComponent<CharacterRagdoll>().partList)
+                        {
+                            bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                        }
                     }
                 }
             }

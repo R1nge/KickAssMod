@@ -51,5 +51,8 @@
       <Reference Include="UnityEngine">
         <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.dll</HintPath>
       </Reference>
+      <Reference Include="Zorro.Core.Runtime">
+        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Zorro.Core.Runtime.dll</HintPath>
+      </Reference>
     </ItemGroup>
 </Project>
