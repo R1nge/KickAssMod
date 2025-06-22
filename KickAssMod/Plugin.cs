@@ -18,26 +18,11 @@ public class Plugin : BaseUnityPlugin
     }
 }
 
-[HarmonyPatch(typeof(AirportCheckInKiosk))]
-[HarmonyPatch("IsInteractable")] // if possible use nameof() here
-class Patch01
+[HarmonyPatch(typeof(AirportCheckInKiosk), MethodType.Setter)]
+internal class Patch01
 {
-    static bool Prefix(AirportCheckInKiosk __instance, ref Character ___character)
+    static void Prefix(AirportCheckInKiosk __instance)
     {
-        return false;
+        __instance.interactTime = 1000;
     }
-}
-
-public class AirportCheckInKiosk
-{
-    // Token: 0x0600044B RID: 1099 RVA: 0x00019722 File Offset: 0x00017922
-    public bool IsInteractible(Character interactor)
-    {
-        return true;
-    }
-}
-
-public class Character
-{
-    
 }
