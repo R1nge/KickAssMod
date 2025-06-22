@@ -62,11 +62,19 @@ internal class KickMono : MonoBehaviourPun
                     else
                     {
                         Plugin.Logger.LogInfo("No collision");
+                        foreach (Bodypart bodypart in player.character.refs.ragdoll.partList)
+                        {
+                            bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                        }
                     }
                 }
                 else
                 {
                     Plugin.Logger.LogInfo("No collision");
+                    foreach (Bodypart bodypart in player.character.refs.ragdoll.partList)
+                    {
+                        bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                    }
                 }
             }
         }
@@ -88,6 +96,7 @@ internal class Patch02
                 {
                     player.gameObject.AddComponent<KickMono>();
                 }
+
                 if (player.character.IsLocal)
                 {
                     Plugin.Logger.LogInfo("Local player");
