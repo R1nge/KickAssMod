@@ -28,3 +28,12 @@ internal class Patch01
         Plugin.Logger.LogInfo("HoverEnter");
     }
 }
+
+[HarmonyPatch(typeof(EmoteWheel), nameof(EmoteWheel.Hover), MethodType.Normal)]
+internal class Patch02
+{
+    static void Prefix(EmoteWheel __instance, EmoteWheelData ___data)
+    {
+        Plugin.Logger.LogInfo($"Choose EmoteWheel {___data.emoteName}");
+    }
+}
