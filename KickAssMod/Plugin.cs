@@ -18,25 +18,15 @@ public class Plugin : BaseUnityPlugin
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
-        Harmony.CreateAndPatchAll(typeof(Patch01));
-        Harmony.CreateAndPatchAll(typeof(Patch02));
-        Harmony.CreateAndPatchAll(typeof(Patch03));
-        Harmony.CreateAndPatchAll(typeof(Patch04));
-        Harmony.CreateAndPatchAll(typeof(Patch05));
-    }
-}
-
-[HarmonyPatch(typeof(AirportCheckInKiosk), nameof(AirportCheckInKiosk.HoverEnter), MethodType.Normal)]
-internal class Patch01
-{
-    static void Prefix(AirportCheckInKiosk __instance)
-    {
-        Plugin.Logger.LogInfo("HoverEnter");
+        Harmony.CreateAndPatchAll(typeof(KickAss));
+        Harmony.CreateAndPatchAll(typeof(FreezeTimeOnPause));
+        Harmony.CreateAndPatchAll(typeof(UnfreezeTimeUnpause));
+        Harmony.CreateAndPatchAll(typeof(UnfreezeTimeLeaveLobby));
     }
 }
 
 [HarmonyPatch(typeof(GUIManager), nameof(GUIManager.TriggerMenuWindowOpened), MethodType.Normal)]
-internal class Patch03
+internal class FreezeTimeOnPause
 {
     static void Prefix(MenuWindow window, GUIManager __instance)
     {
@@ -62,7 +52,7 @@ internal class Patch03
 }
 
 [HarmonyPatch(typeof(GUIManager), nameof(GUIManager.TriggerMenuWindowClosed), MethodType.Normal)]
-internal class Patch04
+internal class UnfreezeTimeUnpause
 {
     static void Prefix(MenuWindow window, GUIManager __instance)
     {
@@ -80,7 +70,7 @@ internal class Patch04
 }
 
 [HarmonyPatch(typeof(SteamLobbyHandler), nameof(SteamLobbyHandler.LeaveLobby), MethodType.Normal)]
-internal class Patch05
+internal class UnfreezeTimeLeaveLobby
 {
     static void Prefix(SteamLobbyHandler __instance)
     {
@@ -140,7 +130,7 @@ internal class KickMono : MonoBehaviourPun
 }
 
 [HarmonyPatch(typeof(EmoteWheel), nameof(EmoteWheel.Hover), MethodType.Normal)]
-internal class Patch02
+internal class KickAss
 {
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
