@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -125,37 +126,16 @@ internal class KickMono : MonoBehaviourPun
             Plugin.Logger.LogInfo($"{hit.point}");
             Plugin.Logger.LogInfo($"{hit.distance}");
 
-
-            if (hit.collider.TryGetComponent(out Character character))
-            {
-                Plugin.Logger.LogInfo($"Found char {character.name}: {character.name}");
-                foreach (Bodypart bodypart in character.refs.ragdoll.partList)
-                {
-                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                }
-            }
-            else
-            {
-                Plugin.Logger.LogInfo("No char found");
-            }
-
-            var char1 = hit.collider.GetComponentInChildren<Character>();
-
-            if (char1 != null)
-            {
-                Plugin.Logger.LogInfo($"Char1 {char1.name}: {hit.collider.name}");
-                foreach (Bodypart bodypart in char1.refs.ragdoll.partList)
-                {
-                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                }
-            }
-
             var char2 = hit.collider.GetComponentInParent<Character>();
             if (char2 != null)
             {
                 Plugin.Logger.LogInfo($"Char2 {char2.name}: {hit.collider.name}");
+                char2.data.avarageLastFrameVelocity = rayDirection * 100000f;
+                char2.data.avarageVelocity = rayDirection * 1000000f;
                 foreach (Bodypart bodypart in char2.refs.ragdoll.partList)
                 {
+                    bodypart.Rig.isKinematic = false;
+                    bodypart.Rig.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
                     bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
                 }
             }
@@ -172,6 +152,12 @@ internal class KickAss
 {
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
+        __instance.StartCoroutine(Cor(emoteWheelData));
+    }
+
+    static IEnumerator Cor(EmoteWheelData emoteWheelData)
+    {
+        yield return new WaitForFixedUpdate();
         Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
         if (emoteWheelData.emoteName == "Shrug")
         {
