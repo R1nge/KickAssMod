@@ -22,6 +22,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(FreezeTimeOnPause));
         Harmony.CreateAndPatchAll(typeof(UnfreezeTimeUnpause));
         Harmony.CreateAndPatchAll(typeof(UnfreezeTimeLeaveLobby));
+        Harmony.CreateAndPatchAll(typeof(RemoveLoudSoundUI));
     }
 }
 
@@ -48,6 +49,23 @@ internal class FreezeTimeOnPause
             Time.timeScale = 0.1f;
             Character.localCharacter.input.pauseWasPressed = false;
         }
+    }
+}
+
+[HarmonyPatch(typeof(SFX_Player), nameof(SFX_Player.PlaySFX), MethodType.Normal)]
+internal class RemoveLoudSoundUI
+{
+    static bool Prefix(SFX_Player ___instance, SFX_Instance SFX, Vector3 position, Transform followTransform = null,
+        SFX_Settings overrideSettings = null, float volumeMultiplier = 1f, bool loop = false)
+    {
+        Plugin.Logger.LogInfo($"Play sfx {SFX.name}");
+        if (SFX.name is "SFXI UI Titlescreen button wood 1" or "SFXI UI Titlescreen button generic" or "SFXI UI Titlescreen button wood 2" or "SFXI UI Titlescreen button wood 3" or "SFXI UI Titlescreen button wood 4" or "SFXI UI Titlescreen button wood 5")
+        {
+            Plugin.Logger.LogInfo("Muting Loud UI sound");
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -78,7 +96,6 @@ internal class UnfreezeTimeLeaveLobby
         Time.timeScale = 1f;
     }
 }
-
 
 internal class KickMono : MonoBehaviourPun
 {
