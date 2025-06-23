@@ -19,10 +19,10 @@ public class Plugin : BaseUnityPlugin
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         Harmony.CreateAndPatchAll(typeof(KickAss));
-        Harmony.CreateAndPatchAll(typeof(FreezeTimeOnPause));
-        Harmony.CreateAndPatchAll(typeof(UnfreezeTimeUnpause));
-        Harmony.CreateAndPatchAll(typeof(UnfreezeTimeLeaveLobby));
-        Harmony.CreateAndPatchAll(typeof(RemoveLoudSoundUI));
+        //Harmony.CreateAndPatchAll(typeof(FreezeTimeOnPause));
+        //Harmony.CreateAndPatchAll(typeof(UnfreezeTimeUnpause));
+        //Harmony.CreateAndPatchAll(typeof(UnfreezeTimeLeaveLobby));
+        //Harmony.CreateAndPatchAll(typeof(RemoveLoudSoundUI));
     }
 }
 
@@ -59,7 +59,9 @@ internal class RemoveLoudSoundUI
         SFX_Settings overrideSettings = null, float volumeMultiplier = 1f, bool loop = false)
     {
         Plugin.Logger.LogInfo($"Play sfx {SFX.name}");
-        if (SFX.name is "SFXI UI Titlescreen button wood 1" or "SFXI UI Titlescreen button generic" or "SFXI UI Titlescreen button wood 2" or "SFXI UI Titlescreen button wood 3" or "SFXI UI Titlescreen button wood 4" or "SFXI UI Titlescreen button wood 5")
+        if (SFX.name is "SFXI UI Titlescreen button wood 1" or "SFXI UI Titlescreen button generic"
+            or "SFXI UI Titlescreen button wood 2" or "SFXI UI Titlescreen button wood 3"
+            or "SFXI UI Titlescreen button wood 4" or "SFXI UI Titlescreen button wood 5")
         {
             Plugin.Logger.LogInfo("Muting Loud UI sound");
             return false;
@@ -106,42 +108,61 @@ internal class KickMono : MonoBehaviourPun
         var players = PlayerHandler.GetAllPlayers();
         foreach (var player in players)
         {
-            if (player.character.IsLocal)
+            if (!player.TryGetComponent(out KickMono kickMono))
             {
-                Plugin.Logger.LogInfo("Local player");
-                var rayDirection = MainCamera.instance.transform.forward;
-                var rayOrigin = player.character.transform.position;
-                var ray = new Ray(rayOrigin, rayDirection);
-                if (Physics.Raycast(ray, out var hit, 10f))
+                player.gameObject.AddComponent<KickMono>();
+            }
+        }
+
+        Plugin.Logger.LogInfo("Local player");
+        var rayDirection = MainCamera.instance.transform.forward;
+        var rayOrigin = MainCamera.instance.transform.position;
+        var ray = new Ray(rayOrigin, rayDirection);
+        if (Physics.Raycast(ray, out var hit, float.MaxValue, (LayerMask)LayerMask.GetMask("Character"),
+                QueryTriggerInteraction.Collide))
+        {
+            Plugin.Logger.LogInfo($"{hit.collider.name}");
+            Plugin.Logger.LogInfo($"{hit.point}");
+            Plugin.Logger.LogInfo($"{hit.distance}");
+
+
+            if (hit.collider.TryGetComponent(out Character character))
+            {
+                Plugin.Logger.LogInfo($"Found char {character.name}: {character.name}");
+                foreach (Bodypart bodypart in character.refs.ragdoll.partList)
                 {
-                    Plugin.Logger.LogInfo($"{player.character.name}: {hit.collider.name}");
-                    Plugin.Logger.LogInfo($"{player.character.name}: {hit.point}");
-                    Plugin.Logger.LogInfo($"{player.character.name}: {hit.distance}");
-                    if (hit.collider.TryGetComponent(out CharacterRagdoll character))
-                    {
-                        foreach (Bodypart bodypart in character.partList)
-                        {
-                            bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                        }
-                    }
-                    else
-                    {
-                        Plugin.Logger.LogInfo("No collision");
-                        foreach (Bodypart bodypart in player.character.refs.ragdoll.partList)
-                        {
-                            bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                        }
-                    }
-                }
-                else
-                {
-                    Plugin.Logger.LogInfo("No collision");
-                    foreach (Bodypart bodypart in player.character.refs.ragdoll.partList)
-                    {
-                        bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                    }
+                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
                 }
             }
+            else
+            {
+                Plugin.Logger.LogInfo("No char found");
+            }
+
+            var char1 = hit.collider.GetComponentInChildren<Character>();
+
+            if (char1 != null)
+            {
+                Plugin.Logger.LogInfo($"Char1 {char1.name}: {hit.collider.name}");
+                foreach (Bodypart bodypart in char1.refs.ragdoll.partList)
+                {
+                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                }
+            }
+
+            var char2 = hit.collider.GetComponentInParent<Character>();
+            if (char2 != null)
+            {
+                Plugin.Logger.LogInfo($"Char2 {char2.name}: {hit.collider.name}");
+                foreach (Bodypart bodypart in char2.refs.ragdoll.partList)
+                {
+                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                }
+            }
+        }
+        else
+        {
+            Plugin.Logger.LogInfo("No collision at all");
         }
     }
 }
