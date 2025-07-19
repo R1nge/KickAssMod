@@ -1,5 +1,6 @@
-Use 'Shrug' emotion to trigger a kick
+Use 'Shrug' emotion to trigger a kick  
 To change the emotion open `config_folder/KickAssMod.cfg' and change 'KickEmotion' value  
+
 Possible values: 
 - Salute
 - Thumbs Up
