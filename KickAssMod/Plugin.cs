@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using Photon.Pun;
@@ -13,13 +14,15 @@ namespace KickAssMod;
 public class Plugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
+    public static ConfigEntry<string> ConfigKickEmotion;
 
     private void Awake()
     {
         // Plugin startup logic
         Logger = base.Logger;
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        ConfigKickEmotion = Config.Bind("Controls", "KickEmotion", "Shrug", "Emote to use for kick");
         Harmony.CreateAndPatchAll(typeof(KickAss));
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         //Harmony.CreateAndPatchAll(typeof(FreezeTimeOnPause));
         //Harmony.CreateAndPatchAll(typeof(UnfreezeTimeUnpause));
         //Harmony.CreateAndPatchAll(typeof(UnfreezeTimeLeaveLobby));
@@ -155,7 +158,8 @@ internal class KickAss
 {
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
-        if (emoteWheelData.emoteName == "Shrug")
+        Plugin.Logger.LogInfo("Emote hovered: " + emoteWheelData.emoteName);
+        if (emoteWheelData.emoteName == Plugin.ConfigKickEmotion.Value)
         {
             __instance.StartCoroutine(PerformKick());
         }
