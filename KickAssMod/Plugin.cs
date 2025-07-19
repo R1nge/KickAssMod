@@ -123,6 +123,7 @@ internal class KickMono : MonoBehaviourPun
             Plugin.Logger.LogInfo("Hit character: " + hitCharacter.name);
             if (hitCharacter != null && !hitCharacter.IsLocal)
             {
+                Plugin.Logger.LogInfo("Kicking character: " + hitCharacter.name);
                 // Calculate force direction with slight upward angle
                 Vector3 forceDirection = (hit.transform.position - kickOrigin).normalized + Vector3.up * UPWARDS_MODIFIER;
                 forceDirection.Normalize();
@@ -159,14 +160,23 @@ internal class KickAss
 
     static IEnumerator PerformKick()
     {
+        Plugin.Logger.LogInfo("Performing kick");
         yield return new WaitForFixedUpdate();
         
         Character localCharacter = Character.localCharacter;
-        if (localCharacter == null) yield break;
+        if (localCharacter == null)
+        {
+            Plugin.Logger.LogInfo("No local character found");
+            yield break;
+        }
 
         // Get the player component
-        Player localPlayer = localCharacter.GetComponentInParent<Player>();
-        if (localPlayer == null) yield break;
+        Player localPlayer = localCharacter.player;
+        if (localPlayer == null)
+        {
+            Plugin.Logger.LogInfo("No player component found");
+            yield break;
+        }
 
         // Add KickMono if not present
         if (!localPlayer.TryGetComponent(out KickMono _))
@@ -185,8 +195,7 @@ internal class KickAss
         //SFX_Player.Instance.PlaySFX(SFX_Instance.Get("SFX_Player_Kick"), localCharacter.transform.position);
 
         // Send kick RPC
-        localPlayer.photonView.RPC("KickRPC", RpcTarget.All, kickOrigin, kickDirection);
-        
         Plugin.Logger.LogInfo($"Kick performed from {kickOrigin} in direction {kickDirection}");
+        localPlayer.photonView.RPC("KickRPC", RpcTarget.All, kickOrigin, kickDirection);
     }
 }
