@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using BepInEx;
 using BepInEx.Logging;
@@ -102,47 +102,46 @@ internal class UnfreezeTimeLeaveLobby
 
 internal class KickMono : MonoBehaviourPun
 {
+    private const float KICK_FORCE = 30f;
+    private const float KICK_RADIUS = 2f;
+    private const float KICK_RANGE = 3f;
+    private const float UPWARDS_MODIFIER = 0.5f;
+
     [PunRPC]
-    public void KickRPC()
+    public void KickRPC(Vector3 kickOrigin, Vector3 kickDirection, PhotonMessageInfo info)
     {
-        Plugin.Logger.LogInfo("Kick");
-        var players = PlayerHandler.GetAllPlayers();
-        foreach (var player in players)
-        {
-            if (!player.TryGetComponent(out KickMono kickMono))
-            {
-                player.gameObject.AddComponent<KickMono>();
-            }
-        }
+        // Only the master client handles the kick logic for consistency
+        if (!PhotonNetwork.IsMasterClient) return;
 
-        Plugin.Logger.LogInfo("Local player");
-        var rayDirection = MainCamera.instance.transform.forward;
-        var rayOrigin = MainCamera.instance.transform.position;
-        var ray = new Ray(rayOrigin, rayDirection);
-        if (Physics.Raycast(ray, out var hit, float.MaxValue, (LayerMask)LayerMask.GetMask("Character"),
-                QueryTriggerInteraction.Collide))
-        {
-            Plugin.Logger.LogInfo($"{hit.collider.name}");
-            Plugin.Logger.LogInfo($"{hit.point}");
-            Plugin.Logger.LogInfo($"{hit.distance}");
+        // Create a ray from the kick origin in the kick direction
+        Ray ray = new Ray(kickOrigin, kickDirection);
+        RaycastHit[] hits = Physics.SphereCastAll(ray, KICK_RADIUS, KICK_RANGE, LayerMask.GetMask("Character"));
 
-            var char2 = hit.collider.GetComponentInParent<Character>();
-            if (char2 != null)
+        foreach (var hit in hits)
+        {
+            Character hitCharacter = hit.collider.GetComponentInParent<Character>();
+            Plugin.Logger.LogInfo("Hit character: " + hitCharacter.name);
+            if (hitCharacter != null && !hitCharacter.IsLocal)
             {
-                Plugin.Logger.LogInfo($"Char2 {char2.name}: {hit.collider.name}");
-                char2.data.avarageLastFrameVelocity = rayDirection * 100000f;
-                char2.data.avarageVelocity = rayDirection * 1000000f;
-                foreach (Bodypart bodypart in char2.refs.ragdoll.partList)
+                // Calculate force direction with slight upward angle
+                Vector3 forceDirection = (hit.transform.position - kickOrigin).normalized + Vector3.up * UPWARDS_MODIFIER;
+                forceDirection.Normalize();
+
+                // Apply force to all ragdoll parts
+                foreach (Bodypart bodypart in hitCharacter.refs.ragdoll.partList)
                 {
-                    bodypart.Rig.isKinematic = false;
-                    bodypart.Rig.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
-                    bodypart.AddForce(rayDirection * 10000f, ForceMode.Acceleration);
+                    if (bodypart.Rig != null)
+                    {
+                        bodypart.Rig.isKinematic = false;
+                        bodypart.Rig.AddForce(forceDirection * KICK_FORCE, ForceMode.VelocityChange);
+                    }
                 }
+
+                // Optional: Play kick sound effect
+                //SFX_Player.Instance.PlaySFX(SFX_Instance.Get("SFX_Player_Hit"), hit.point);
+                
+                Plugin.Logger.LogInfo($"Kicked player: {hitCharacter.name}");
             }
-        }
-        else
-        {
-            Plugin.Logger.LogInfo("No collision at all");
         }
     }
 }
@@ -152,32 +151,42 @@ internal class KickAss
 {
     static void Prefix(EmoteWheelData emoteWheelData, EmoteWheel __instance)
     {
-        __instance.StartCoroutine(Cor(emoteWheelData));
-    }
-
-    static IEnumerator Cor(EmoteWheelData emoteWheelData)
-    {
-        yield return new WaitForFixedUpdate();
-        Plugin.Logger.LogInfo($"Choose EmoteWheel {emoteWheelData.emoteName}");
         if (emoteWheelData.emoteName == "Shrug")
         {
-            var players = PlayerHandler.GetAllPlayers();
-            foreach (var player in players)
-            {
-                if (!player.TryGetComponent(out KickMono kickMono))
-                {
-                    player.gameObject.AddComponent<KickMono>();
-                }
-
-                if (player.character.IsLocal)
-                {
-                    Plugin.Logger.LogInfo("Local player");
-                    var rayDirection = MainCamera.instance.transform.forward;
-                    var rayOrigin = player.character.transform.position;
-                    var ray = new Ray(rayOrigin, rayDirection);
-                    player.photonView.RPC("KickRPC", RpcTarget.All, Array.Empty<object>());
-                }
-            }
+            __instance.StartCoroutine(PerformKick());
         }
+    }
+
+    static IEnumerator PerformKick()
+    {
+        yield return new WaitForFixedUpdate();
+        
+        Character localCharacter = Character.localCharacter;
+        if (localCharacter == null) yield break;
+
+        // Get the player component
+        Player localPlayer = localCharacter.GetComponentInParent<Player>();
+        if (localPlayer == null) yield break;
+
+        // Add KickMono if not present
+        if (!localPlayer.TryGetComponent(out KickMono _))
+        {
+            localPlayer.gameObject.AddComponent<KickMono>();
+        }
+
+        // Calculate kick origin and direction
+        Vector3 kickOrigin = MainCamera.instance.transform.position;
+        Vector3 kickDirection = MainCamera.instance.transform.forward;
+
+        // Visual feedback
+        //localCharacter.animator.SetTrigger("Kick");
+        
+        // Play kick sound
+        //SFX_Player.Instance.PlaySFX(SFX_Instance.Get("SFX_Player_Kick"), localCharacter.transform.position);
+
+        // Send kick RPC
+        localPlayer.photonView.RPC("KickRPC", RpcTarget.All, kickOrigin, kickDirection);
+        
+        Plugin.Logger.LogInfo($"Kick performed from {kickOrigin} in direction {kickDirection}");
     }
 }
