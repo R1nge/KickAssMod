@@ -106,6 +106,7 @@ internal class KickMono : MonoBehaviourPun
     private const float KICK_RADIUS = 2f;
     private const float KICK_RANGE = 3f;
     private const float UPWARDS_MODIFIER = 0.5f;
+    private RaycastHit[] hits = new RaycastHit[10];
 
     [PunRPC]
     public void KickRPC(Vector3 kickOrigin, Vector3 kickDirection, PhotonMessageInfo info)
@@ -115,17 +116,19 @@ internal class KickMono : MonoBehaviourPun
 
         // Create a ray from the kick origin in the kick direction
         Ray ray = new Ray(kickOrigin, kickDirection);
-        RaycastHit[] hits = Physics.SphereCastAll(ray, KICK_RADIUS, KICK_RANGE, LayerMask.GetMask("Character"));
+        var hitCount = Physics.SphereCastNonAlloc(ray, KICK_RADIUS, hits, KICK_RANGE, LayerMask.GetMask("Character"));
 
-        foreach (var hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
+            var hit = hits[i];
             Character hitCharacter = hit.collider.GetComponentInParent<Character>();
             Plugin.Logger.LogInfo("Hit character: " + hitCharacter.name);
             if (hitCharacter != null && !hitCharacter.IsLocal)
             {
                 Plugin.Logger.LogInfo("Kicking character: " + hitCharacter.name);
                 // Calculate force direction with slight upward angle
-                Vector3 forceDirection = (hit.transform.position - kickOrigin).normalized + Vector3.up * UPWARDS_MODIFIER;
+                Vector3 forceDirection =
+                    (hit.transform.position - kickOrigin).normalized + Vector3.up * UPWARDS_MODIFIER;
                 forceDirection.Normalize();
 
                 // Apply force to all ragdoll parts
@@ -140,7 +143,7 @@ internal class KickMono : MonoBehaviourPun
 
                 // Optional: Play kick sound effect
                 //SFX_Player.Instance.PlaySFX(SFX_Instance.Get("SFX_Player_Hit"), hit.point);
-                
+
                 Plugin.Logger.LogInfo($"Kicked player: {hitCharacter.name}");
             }
         }
@@ -162,7 +165,7 @@ internal class KickAss
     {
         Plugin.Logger.LogInfo("Performing kick");
         yield return new WaitForFixedUpdate();
-        
+
         Character localCharacter = Character.localCharacter;
         if (localCharacter == null)
         {
@@ -190,7 +193,7 @@ internal class KickAss
 
         // Visual feedback
         //localCharacter.animator.SetTrigger("Kick");
-        
+
         // Play kick sound
         //SFX_Player.Instance.PlaySFX(SFX_Instance.Get("SFX_Player_Kick"), localCharacter.transform.position);
 
