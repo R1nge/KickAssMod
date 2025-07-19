@@ -28,34 +28,34 @@
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Assembly-CSharp.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\Assembly-CSharp.dll</HintPath>
       </Reference>
       <Reference Include="netstandard">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\netstandard.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\netstandard.dll</HintPath>
       </Reference>
       <Reference Include="PhotonRealtime">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\PhotonRealtime.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\PhotonRealtime.dll</HintPath>
       </Reference>
       <Reference Include="PhotonUnityNetworking">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\PhotonUnityNetworking.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\PhotonUnityNetworking.dll</HintPath>
       </Reference>
       <Reference Include="System">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\System.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\System.dll</HintPath>
       </Reference>
       <Reference Include="System.Collections">
         <HintPath>..\..\..\UnityEditors\6000.0.48f1\Editor\Data\Resources\Licensing\Client\System.Collections.dll</HintPath>
       </Reference>
       <Reference Include="Unity.Collections">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.Collections.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\Unity.Collections.dll</HintPath>
       </Reference>
       <Reference Include="Unity.TextMeshPro">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\Unity.TextMeshPro.dll</HintPath>
       </Reference>
       <Reference Include="UnityEngine">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\UnityEngine.dll</HintPath>
       </Reference>
       <Reference Include="Zorro.Core.Runtime">
-        <HintPath>..\..\..\SteamLibrary\steamapps\common\PEAK\PEAK_Data\Managed\Zorro.Core.Runtime.dll</HintPath>
+        <HintPath>..\..\..\Steam\steamapps\common\PEAK\PEAK_Data\Managed\Zorro.Core.Runtime.dll</HintPath>
       </Reference>
     </ItemGroup>
 </Project>
