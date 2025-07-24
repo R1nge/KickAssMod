@@ -8,6 +8,7 @@ using HarmonyLib;
 using Photon.Pun;
 using UnityEngine;
 using Zorro.Core;
+using Logger = BepInEx.Logging.Logger;
 
 namespace KickAssMod;
 
@@ -106,11 +107,11 @@ internal class UnfreezeTimeLeaveLobby
 
 internal class KickMono : MonoBehaviourPun
 {
-    private const float KICK_FORCE = 30f;
+    private const float KICK_FORCE = 3000f;
     private const float KICK_RADIUS = 2f;
     private const float KICK_RANGE = 3f;
     private const float UPWARDS_MODIFIER = 0.5f;
-    private RaycastHit[] hits = new RaycastHit[10];
+    private RaycastHit[] hits = new RaycastHit[100];
     private Dictionary<Character, Coroutine> activeKicks = new Dictionary<Character, Coroutine>();
 
     [PunRPC]
@@ -118,18 +119,35 @@ internal class KickMono : MonoBehaviourPun
     {
         // Only process on the master client
         if (!PhotonNetwork.IsMasterClient) return;
-
+        Plugin.Logger.LogInfo("Received kick from " + info.Sender);
         Ray ray = new Ray(kickOrigin, kickDirection);
         var hitCount = Physics.SphereCastNonAlloc(ray, KICK_RADIUS, hits, KICK_RANGE, LayerMask.GetMask("Character"));
-
+        Plugin.Logger.LogInfo($"Kicked times {hitCount} from {info.Sender}");
         for (int i = 0; i < hitCount; i++)
         {
             var hit = hits[i];
             Character hitCharacter = hit.collider.GetComponentInParent<Character>();
-            if (hitCharacter == null || hitCharacter.IsLocal) continue;
+            if (hitCharacter == null)
+            {
+                Plugin.Logger.LogInfo($"No character found at {hit.point}; Skipping");
+                continue;
+            }
 
+            if (hitCharacter.IsLocal)
+            {
+                Plugin.Logger.LogInfo($"Character {hitCharacter.name} is local; skipping");
+                continue;
+            }
+
+            Plugin.Logger.LogInfo($"Kicking {hitCharacter.name}");
             // If this character is already being kicked, skip
-            if (activeKicks.ContainsKey(hitCharacter)) continue;
+            if (activeKicks.ContainsKey(hitCharacter))
+            {
+                Plugin.Logger.LogInfo($"Character {hitCharacter.name} is already being kicked");
+                continue;
+            }
+
+            Plugin.Logger.LogInfo($"Kicking {hitCharacter.name}");
 
             // Start the kick coroutine
             var coroutine = StartCoroutine(ApplyKickForce(hitCharacter, kickOrigin));
@@ -140,19 +158,25 @@ internal class KickMono : MonoBehaviourPun
     private IEnumerator ApplyKickForce(Character character, Vector3 kickOrigin)
     {
         // Calculate force direction with slight upward angle
+        Plugin.Logger.LogInfo($"Applying kick force to {character.name}");
         Vector3 forceDirection = (character.transform.position - kickOrigin).normalized + Vector3.up * UPWARDS_MODIFIER;
         forceDirection.Normalize();
 
         // Temporarily disable character controller to allow physics to take over
         var controller = character.GetComponent<CharacterController>();
         bool wasEnabled = controller != null && controller.enabled;
-        if (controller != null) controller.enabled = false;
+        if (controller != null)
+        {
+            Plugin.Logger.LogInfo($"Disabling character controller for {character.name}");
+            controller.enabled = false;
+        }
 
         // Apply force to all ragdoll parts
         foreach (Bodypart bodypart in character.refs.ragdoll.partList)
         {
             if (bodypart.Rig != null)
             {
+                Plugin.Logger.LogInfo($"Applying kick force to {bodypart.name}");
                 bodypart.Rig.isKinematic = false;
                 bodypart.Rig.velocity = Vector3.zero;
                 bodypart.Rig.AddForce(forceDirection * KICK_FORCE, ForceMode.VelocityChange);
@@ -166,12 +190,14 @@ internal class KickMono : MonoBehaviourPun
         // Re-enable character controller after physics have been applied
         if (controller != null && wasEnabled)
         {
+            Plugin.Logger.LogInfo($"Re-enabling character controller for {character.name}");
             controller.enabled = true;
         }
 
         // Clean up
         if (activeKicks.ContainsKey(character))
         {
+            Plugin.Logger.LogInfo($"Cleaning up kick for {character.name}");
             activeKicks.Remove(character);
         }
     }
@@ -186,6 +212,7 @@ internal class KickMono : MonoBehaviourPun
                 StopCoroutine(kvp.Value);
             }
         }
+
         activeKicks.Clear();
     }
 }
@@ -229,7 +256,7 @@ internal class KickAss
         }
 
         // Calculate kick origin and direction
-        Vector3 kickOrigin = MainCamera.instance.transform.position;
+        Vector3 kickOrigin = MainCamera.instance.transform.position + Vector3.forward * 0.5f;
         Vector3 kickDirection = MainCamera.instance.transform.forward;
 
         // Visual feedback
