@@ -256,9 +256,9 @@ internal class KickAss
         }
 
         // Calculate kick origin and direction
-        Vector3 kickOrigin = MainCamera.instance.transform.position + Vector3.forward * 0.5f;
+        Vector3 kickOrigin = MainCamera.instance.transform.position + Vector3.forward * 3f;
         Vector3 kickDirection = MainCamera.instance.transform.forward;
-
+        Plugin.Logger.LogInfo($"Camera position: {MainCamera.instance.transform.position}; Kick origin: {kickOrigin}; Kick direction: {kickDirection}; Camera forward: {MainCamera.instance.transform.forward}");
         // Visual feedback
         //localCharacter.animator.SetTrigger("Kick");
 
