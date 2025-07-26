@@ -117,42 +117,77 @@ internal class KickMono : MonoBehaviourPun
     [PunRPC]
     public void KickRPC(Vector3 kickOrigin, Vector3 kickDirection, PhotonMessageInfo info)
     {
-        // Only process on the master client
+        // Only the Master Client validates the kick
         if (!PhotonNetwork.IsMasterClient) return;
-        Plugin.Logger.LogInfo("Received kick from " + info.Sender);
+
+        Plugin.Logger.LogInfo($"MasterClient validating kick from {info.Sender.NickName}");
         Ray ray = new Ray(kickOrigin, kickDirection);
         var hitCount = Physics.SphereCastNonAlloc(ray, KICK_RADIUS, hits, KICK_RANGE, LayerMask.GetMask("Character"));
-        Plugin.Logger.LogInfo($"Kicked times {hitCount} from {info.Sender}");
+
+        if (hitCount == 0)
+        {
+            Plugin.Logger.LogInfo("No characters hit");
+            return;
+        }
+
         for (int i = 0; i < hitCount; i++)
         {
             var hit = hits[i];
-            Character hitCharacter = hit.collider.GetComponentInParent<Character>();
+            if (hit.transform == null)
+            {
+                Plugin.Logger.LogInfo("Hit transform is null");
+                continue;
+            }
+
+            Character hitCharacter = hit.transform.GetComponent<Character>();
             if (hitCharacter == null)
             {
-                Plugin.Logger.LogInfo($"No character found at {hit.point}; Skipping");
+                Plugin.Logger.LogInfo("Hit character is null");
                 continue;
             }
 
-            if (hitCharacter.IsLocal)
+            if (hitCharacter.player.photonView.Owner == info.Sender)
             {
-                Plugin.Logger.LogInfo($"Character {hitCharacter.name} is local; skipping");
-                continue;
+                Plugin.Logger.LogInfo("Hit character is null or is the MasterClient");
+                continue; // Don't kick yourself
             }
 
-            Plugin.Logger.LogInfo($"Kicking {hitCharacter.name}");
             // If this character is already being kicked, skip
             if (activeKicks.ContainsKey(hitCharacter))
             {
-                Plugin.Logger.LogInfo($"Character {hitCharacter.name} is already being kicked");
+                Plugin.Logger.LogInfo($"Character {hitCharacter.player.photonView.Owner.NickName} is already being kicked. Skipping.");
                 continue;
             }
 
-            Plugin.Logger.LogInfo($"Kicking {hitCharacter.name}");
+            Plugin.Logger.LogInfo(
+                $"MasterClient confirmed kick on {hitCharacter.player.photonView.Owner.NickName}. Sending RPC to owner.");
 
-            // Start the kick coroutine
-            var coroutine = StartCoroutine(ApplyKickForce(hitCharacter, kickOrigin));
-            activeKicks[hitCharacter] = coroutine;
+            // Get the PhotonView of the hit player and send an RPC to its owner
+            hitCharacter.player.photonView.RPC("ApplyKickForceRPC", hitCharacter.player.photonView.Owner, kickOrigin,
+                kickDirection);
         }
+    }
+
+    [PunRPC]
+    public void ApplyKickForceRPC(Vector3 kickOrigin, Vector3 kickDirection, PhotonMessageInfo info)
+    {
+        // This RPC is called by the MasterClient on the owner of the kicked character.
+        // We must verify the sender is the MasterClient to prevent cheating.
+        if (!info.Sender.IsMasterClient)
+        {
+            Plugin.Logger.LogWarning(
+                $"Received ApplyKickForceRPC from non-MasterClient: {info.Sender.NickName}. Ignoring.");
+            return;
+        }
+
+        Character characterToKick = Character.localCharacter;
+        if (characterToKick == null) return;
+
+        Plugin.Logger.LogInfo($"Executing kick on my character as requested by MasterClient.");
+
+        // Start the kick coroutine
+        var coroutine = StartCoroutine(ApplyKickForce(characterToKick, kickOrigin));
+        activeKicks[characterToKick] = coroutine;
     }
 
     private IEnumerator ApplyKickForce(Character character, Vector3 kickOrigin)
@@ -258,7 +293,8 @@ internal class KickAss
         // Calculate kick origin and direction
         Vector3 kickOrigin = MainCamera.instance.transform.position + Vector3.forward * 3f;
         Vector3 kickDirection = MainCamera.instance.transform.forward;
-        Plugin.Logger.LogInfo($"Camera position: {MainCamera.instance.transform.position}; Kick origin: {kickOrigin}; Kick direction: {kickDirection}; Camera forward: {MainCamera.instance.transform.forward}");
+        Plugin.Logger.LogInfo(
+            $"Camera position: {MainCamera.instance.transform.position}; Kick origin: {kickOrigin}; Kick direction: {kickDirection}; Camera forward: {MainCamera.instance.transform.forward}");
         // Visual feedback
         //localCharacter.animator.SetTrigger("Kick");
 
@@ -267,6 +303,6 @@ internal class KickAss
 
         // Send kick RPC
         Plugin.Logger.LogInfo($"Kick performed from {kickOrigin} in direction {kickDirection}");
-        localPlayer.photonView.RPC("KickRPC", RpcTarget.All, kickOrigin, kickDirection);
+        localPlayer.photonView.RPC("KickRPC", RpcTarget.MasterClient, kickOrigin, kickDirection);
     }
 }
